@@ -207,7 +207,7 @@ export default function App() {
       <div className="bg-white border-b border-gray-200 px-6 py-4 mb-8 sticky top-0 z-10 shadow-sm">
         <div className="max-w-6xl mx-auto flex items-center gap-3">
           <div className="bg-blue-600 p-2 rounded-lg"><FolderOpen className="w-6 h-6 text-white" /></div>
-          <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">Dropbox Session Organizer (Server)</h1>
+          <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">Screens Sessions Organizer</h1>
         </div>
       </div>
       <div className="max-w-6xl mx-auto px-6">
