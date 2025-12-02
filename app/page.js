@@ -110,7 +110,7 @@ export default function App() {
 
   // --- Render Views ---
   const renderStart = () => (
-    <div className="flex flex-col items-center justify-center p-12 bg-white rounded-lg shadow-sm border border-gray-200 max-w-lg mx-auto mt-10">
+    <div className="flex flex-col items-center justify-center p-6 sm:p-12 bg-white rounded-lg shadow-sm border border-gray-200 max-w-lg mx-auto mt-10">
       <div className="bg-blue-100 p-4 rounded-full mb-6">
         <FolderOpen className="w-10 h-10 text-blue-600" />
       </div>
@@ -140,16 +140,16 @@ export default function App() {
     const totalFiles = groupKeys.reduce((acc, key) => acc + groups[key].length, 0);
     return (
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+          <div className="mb-4 sm:mb-0">
             <h2 className="text-2xl font-bold text-gray-800">Review Files</h2>
             <p className="text-gray-500">Found {totalFiles} matches in {groupKeys.length} groups.</p>
           </div>
-          <div className="flex gap-3">
-            <button onClick={handleScan} className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button onClick={handleScan} className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md flex items-center justify-center sm:justify-start gap-2">
               <RefreshCw className="w-4 h-4" /> Rescan
             </button>
-            <button onClick={handleMove} disabled={selectedFiles.size === 0} className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-md shadow-sm disabled:opacity-50 flex items-center gap-2">
+            <button onClick={handleMove} disabled={selectedFiles.size === 0} className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-md shadow-sm disabled:opacity-50 flex items-center justify-center sm:justify-start gap-2">
               <MoveRight className="w-4 h-4" /> Move {selectedFiles.size} Files
             </button>
           </div>
@@ -177,7 +177,7 @@ export default function App() {
                         <div className="cursor-pointer">{selectedFiles.has(file.id) ? <CheckSquare className="w-5 h-5 text-blue-600" /> : <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />}</div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1"><FileAudio className="w-4 h-4 text-purple-500" /><span className="text-sm font-medium text-gray-700 truncate">{file.name}</span></div>
-                          <div className="flex items-center text-xs text-gray-500 gap-2 font-mono"><span className="truncate max-w-[45%] text-red-500">/shared_sessions/{file.group}</span><MoveRight className="w-3 h-3 text-gray-300" /><span className="truncate max-w-[45%] text-green-600">{file.destPath}</span></div>
+                          <div className="flex items-center text-xs text-gray-500 gap-2 font-mono"><span className="truncate max-w-[40%] text-red-500">/shared_sessions/{file.group}</span><MoveRight className="w-3 h-3 text-gray-300" /><span className="truncate max-w-[40%] text-green-600">{file.destPath}</span></div>
                         </div>
                       </div>
                     ))}
@@ -192,7 +192,7 @@ export default function App() {
   };
 
   const renderProgress = (isDone) => (
-    <div className="max-w-lg mx-auto text-center py-20">
+    <div className="max-w-lg mx-auto text-center py-10 sm:py-20">
       {isDone ? <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" /> : <Loader2 className="w-12 h-12 animate-spin text-blue-500 mx-auto mb-4" />}
       <h3 className="text-lg font-semibold text-gray-700">{isDone ? 'Operation Complete' : 'Processing...'}</h3>
       <div className="mt-4 max-w-md mx-auto h-48 overflow-y-auto text-xs text-gray-500 bg-white p-4 rounded border font-mono text-left shadow-sm">
@@ -204,13 +204,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-slate-900 pb-20">
-      <div className="bg-white border-b border-gray-200 px-6 py-4 mb-8 sticky top-0 z-10 shadow-sm">
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 mb-8 sticky top-0 z-10 shadow-sm">
         <div className="max-w-6xl mx-auto flex items-center gap-3">
           <div className="bg-blue-600 p-2 rounded-lg"><FolderOpen className="w-6 h-6 text-white" /></div>
           <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">Screens Sessions Organizer</h1>
         </div>
       </div>
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {view === 'start' && renderStart()}
         {(view === 'scanning' || view === 'moving' || view === 'done') && renderProgress(view === 'done')}
         {view === 'review' && renderReview()}
