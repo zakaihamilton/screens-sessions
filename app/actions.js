@@ -107,9 +107,18 @@ export async function scanDropboxServer() {
                     .map(f => {
                         const match = f.name.match(regex);
                         if (match) {
-                            const [fullMatch, dateStr] = match;
+                            const [fullMatch, dateStr, titleStr] = match;
                             const year = dateStr.split('-')[0];
                             const destPath = `/sessions/${groupName}/${year}/${f.name}`;
+
+                            let validationError = null;
+                            if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                                validationError = "Invalid date format (YYYY-MM-DD)";
+                            } else if (titleStr.startsWith(' ')) {
+                                validationError = "Extra space between date and title";
+                            } else if (titleStr.endsWith(' ')) {
+                                validationError = "Space between title and extension";
+                            }
 
                             return {
                                 id: f.id,
@@ -118,7 +127,9 @@ export async function scanDropboxServer() {
                                 path_display: f.path_display,
                                 group: groupName,
                                 year,
-                                destPath
+                                destPath,
+                                isValid: !validationError,
+                                validationError
                             };
                         }
                         return null;
