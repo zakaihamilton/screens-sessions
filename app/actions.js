@@ -144,6 +144,16 @@ export async function scanDropboxServer() {
 // --- Action: Move Files ---
 export async function moveFilesServer(filesToMove) {
     try {
+        // Validate paths for security
+        for (const f of filesToMove) {
+            if (!f.path_lower.startsWith('/shared_sessions/')) {
+                throw new Error('Security violation: Invalid source path. Source files must be in /shared_sessions/.');
+            }
+            if (!f.destPath.startsWith('/sessions/')) {
+                throw new Error('Security violation: Invalid destination path. Destination files must be in /sessions/.');
+            }
+        }
+
         const token = await getAccessToken();
         const entries = filesToMove.map(f => ({
             from_path: f.path_lower,
