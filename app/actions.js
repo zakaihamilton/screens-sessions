@@ -63,6 +63,11 @@ export async function scanDropboxServer() {
         const token = await getAccessToken();
         const regex = /([0-9]*-[0-9]*-[0-9]*) (.*)\.(.*)/;
 
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
         // 1. List folders in /shared_sessions
         let folders = [];
         let hasMore = true;
@@ -114,6 +119,8 @@ export async function scanDropboxServer() {
                             let validationError = null;
                             if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
                                 validationError = "Invalid date format (YYYY-MM-DD)";
+                            } else if (dateStr > tomorrowStr) {
+                                validationError = "Session date is in the future";
                             } else if (titleStr.startsWith(' ')) {
                                 validationError = "Extra space between date and title";
                             } else if (titleStr.endsWith(' ')) {
@@ -157,6 +164,12 @@ export async function scanDropboxServer() {
 // --- Action: Move Files ---
 export async function moveFilesServer(filesToMove) {
     try {
+        const regex = /([0-9]*-[0-9]*-[0-9]*) (.*)\.(.*)/;
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
         // Validate paths for security
         for (const f of filesToMove) {
             if (!f.path_lower.startsWith('/shared_sessions/')) {
@@ -167,6 +180,17 @@ export async function moveFilesServer(filesToMove) {
             }
             if (f.name && (f.name.toLowerCase().includes('private') || f.name.includes('פרטי'))) {
                 throw new Error('Security violation: Cannot move files marked as private.');
+            }
+
+            // Check for future dates
+            if (f.name) {
+                const match = f.name.match(regex);
+                if (match) {
+                    const dateStr = match[1];
+                    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr) && dateStr > tomorrowStr) {
+                         throw new Error('Security violation: Cannot move files with future dates.');
+                    }
+                }
             }
         }
 
