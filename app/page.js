@@ -49,9 +49,13 @@ export default function App() {
       addLog(`Server found ${fileCount} files in ${groupCount} groups.`);
       setGroups(foundGroups);
 
-      // Auto-select all
+      // Auto-select all valid files
       const allIds = new Set();
-      Object.values(foundGroups).flat().forEach(f => allIds.add(f.id));
+      Object.values(foundGroups).flat().forEach(f => {
+        if (f.isValid) {
+          allIds.add(f.id);
+        }
+      });
       setSelectedFiles(allIds);
 
       setView('review');
@@ -92,7 +96,8 @@ export default function App() {
   };
 
   // --- UI Helpers ---
-  const toggleSelect = (id) => {
+  const toggleSelect = (id, isValid) => {
+    if (!isValid) return; // Prevent selecting invalid files
     const next = new Set(selectedFiles);
     if (next.has(id)) next.delete(id);
     else next.add(id);
@@ -100,8 +105,11 @@ export default function App() {
   };
 
   const toggleGroup = (groupName, files) => {
+    const validFiles = files.filter(f => f.isValid);
+    if (validFiles.length === 0) return;
+
     const next = new Set(selectedFiles);
-    const groupIds = files.map(f => f.id);
+    const groupIds = validFiles.map(f => f.id);
     const allSelected = groupIds.every(id => next.has(id));
     if (allSelected) groupIds.forEach(id => next.delete(id));
     else groupIds.forEach(id => next.add(id));
@@ -160,27 +168,60 @@ export default function App() {
           <div className="space-y-6">
             {groupKeys.map(gName => {
               const files = groups[gName];
-              const groupIds = files.map(f => f.id);
-              const allSelected = groupIds.every(id => selectedFiles.has(id));
-              const someSelected = groupIds.some(id => selectedFiles.has(id));
+
+              // Only consider valid files for group selection state
+              const validFiles = files.filter(f => f.isValid);
+              const groupIds = validFiles.map(f => f.id);
+
+              const allSelected = validFiles.length > 0 && groupIds.every(id => selectedFiles.has(id));
+              const someSelected = validFiles.length > 0 && groupIds.some(id => selectedFiles.has(id));
+
               return (
                 <div key={gName} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                   <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center gap-3 cursor-pointer hover:bg-gray-100" onClick={() => toggleGroup(gName, files)}>
-                    {allSelected ? <CheckSquare className="w-5 h-5 text-blue-600" /> : someSelected ? <div className="w-5 h-5 bg-blue-600 rounded-sm flex items-center justify-center"><div className="w-3 h-0.5 bg-white"></div></div> : <Square className="w-5 h-5 text-gray-400" />}
+                    {validFiles.length > 0 ? (
+                      allSelected ? <CheckSquare className="w-5 h-5 text-blue-600" /> : someSelected ? <div className="w-5 h-5 bg-blue-600 rounded-sm flex items-center justify-center"><div className="w-3 h-0.5 bg-white"></div></div> : <Square className="w-5 h-5 text-gray-400" />
+                    ) : <Square className="w-5 h-5 text-gray-200 cursor-not-allowed" />}
+
                     <Folder className="w-5 h-5 text-yellow-500" />
                     <span className="font-semibold text-gray-700">{gName}</span>
                     <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full ml-auto">{files.length} files</span>
                   </div>
                   <div className="divide-y divide-gray-100">
-                    {files.map(file => (
-                      <div key={file.id} className={`px-4 py-3 flex items-center gap-4 hover:bg-blue-50 transition-colors ${selectedFiles.has(file.id) ? 'bg-blue-50/50' : ''}`} onClick={() => toggleSelect(file.id)}>
-                        <div className="cursor-pointer">{selectedFiles.has(file.id) ? <CheckSquare className="w-5 h-5 text-blue-600" /> : <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />}</div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1"><FileAudio className="w-4 h-4 text-purple-500" /><span className="text-sm font-medium text-gray-700 truncate">{file.name}</span></div>
-                          <div className="flex items-center text-xs text-gray-500 gap-2 font-mono"><span className="truncate max-w-[40%] text-red-500">/shared_sessions/{file.group}</span><MoveRight className="w-3 h-3 text-gray-300" /><span className="truncate max-w-[40%] text-green-600">{file.destPath}</span></div>
+                    {files.map(file => {
+                      const isSelected = selectedFiles.has(file.id);
+                      return (
+                        <div
+                          key={file.id}
+                          className={`px-4 py-3 flex items-center gap-4 transition-colors ${file.isValid ? 'hover:bg-blue-50 cursor-pointer' : 'bg-red-50 cursor-not-allowed'} ${isSelected ? 'bg-blue-50/50' : ''}`}
+                          onClick={() => toggleSelect(file.id, file.isValid)}
+                        >
+                          <div className="">
+                            {file.isValid ? (
+                                isSelected ? <CheckSquare className="w-5 h-5 text-blue-600" /> : <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />
+                            ) : (
+                                <AlertCircle className="w-5 h-5 text-red-500" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <FileAudio className={`w-4 h-4 ${file.isValid ? 'text-purple-500' : 'text-gray-400'}`} />
+                              <span className={`text-sm font-medium truncate ${file.isValid ? 'text-gray-700' : 'text-gray-500 line-through'}`}>{file.name}</span>
+                              {!file.isValid && <span className="text-xs text-red-600 bg-red-100 px-2 py-0.5 rounded-full">{file.validationError}</span>}
+                            </div>
+                            <div className="flex items-center text-xs text-gray-500 gap-2 font-mono">
+                              <span className="truncate max-w-[40%] text-red-500">/shared_sessions/{file.group}</span>
+                              {file.isValid && (
+                                <>
+                                  <MoveRight className="w-3 h-3 text-gray-300" />
+                                  <span className="truncate max-w-[40%] text-green-600">{file.destPath}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               );
