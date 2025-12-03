@@ -118,6 +118,8 @@ export async function scanDropboxServer() {
                                 validationError = "Extra space between date and title";
                             } else if (titleStr.endsWith(' ')) {
                                 validationError = "Space between title and extension";
+                            } else if (f.name.toLowerCase().includes('private') || f.name.includes('פרטי')) {
+                                validationError = "file name is marked as private";
                             }
 
                             return {
@@ -162,6 +164,9 @@ export async function moveFilesServer(filesToMove) {
             }
             if (!f.destPath.startsWith('/sessions/')) {
                 throw new Error('Security violation: Invalid destination path. Destination files must be in /sessions/.');
+            }
+            if (f.name && (f.name.toLowerCase().includes('private') || f.name.includes('פרטי'))) {
+                throw new Error('Security violation: Cannot move files marked as private.');
             }
         }
 
