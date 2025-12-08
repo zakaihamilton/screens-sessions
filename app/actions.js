@@ -125,6 +125,8 @@ export async function scanDropboxServer() {
                                 validationError = "Extra space between date and title";
                             } else if (titleStr.endsWith(' ')) {
                                 validationError = "Space between title and extension";
+                            } else if (titleStr.endsWith('.')) {
+                                validationError = "Double period before extension";
                             } else if (f.name.toLowerCase().includes('private') || f.name.includes('פרטי')) {
                                 validationError = "file name is marked as private";
                             }
@@ -182,11 +184,16 @@ export async function moveFilesServer(filesToMove) {
                 throw new Error('Security violation: Cannot move files marked as private.');
             }
 
-            // Check for future dates
+            // Check for future dates and double period
             if (f.name) {
                 const match = f.name.match(regex);
                 if (match) {
-                    const dateStr = match[1];
+                    const [fullMatch, dateStr, titleStr] = match;
+
+                    if (titleStr.endsWith('.')) {
+                        throw new Error('Security violation: Cannot move files with double period before extension.');
+                    }
+
                     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr) && dateStr > tomorrowStr) {
                          throw new Error('Security violation: Cannot move files with future dates.');
                     }
