@@ -11,7 +11,8 @@ import {
   RefreshCw,
   FolderOpen,
   CheckSquare,
-  Square
+  Square,
+  WrapText
 } from 'lucide-react';
 
 // Import Server Actions
@@ -23,6 +24,7 @@ export default function App() {
   const [groups, setGroups] = useState({});
   const [selectedFiles, setSelectedFiles] = useState(new Set());
   const [error, setError] = useState(null);
+  const [showFullNames, setShowFullNames] = useState(false);
 
   const addLog = (msg, type = 'info') => {
     setLogs(prev => [...prev, { msg, type, time: new Date().toLocaleTimeString() }]);
@@ -154,6 +156,17 @@ export default function App() {
             <p className="text-gray-500">Found {totalFiles} matches in {groupKeys.length} groups.</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => setShowFullNames(!showFullNames)}
+              className={`px-4 py-2 rounded-md flex items-center justify-center sm:justify-start gap-2 border transition-colors ${
+                showFullNames
+                  ? 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200'
+                  : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <WrapText className="w-4 h-4" />
+              <span>{showFullNames ? 'Collapse Names' : 'Show Full Names'}</span>
+            </button>
             <button onClick={handleScan} className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md flex items-center justify-center sm:justify-start gap-2">
               <RefreshCw className="w-4 h-4" /> Rescan
             </button>
@@ -205,9 +218,9 @@ export default function App() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <FileAudio className={`w-4 h-4 ${file.isValid ? 'text-purple-500' : 'text-gray-400'}`} />
-                              <span className={`text-sm font-medium truncate ${file.isValid ? 'text-gray-700' : 'text-gray-500 line-through'}`}>{file.name}</span>
-                              {!file.isValid && <span className="text-xs text-red-600 bg-red-100 px-2 py-0.5 rounded-full">{file.validationError}</span>}
+                              <FileAudio className={`w-4 h-4 shrink-0 ${file.isValid ? 'text-purple-500' : 'text-gray-400'}`} />
+                              <span className={`text-sm font-medium ${showFullNames ? 'break-words whitespace-normal' : 'truncate'} ${file.isValid ? 'text-gray-700' : 'text-gray-500 line-through'}`}>{file.name}</span>
+                              {!file.isValid && <span className="text-xs text-red-600 bg-red-100 px-2 py-0.5 rounded-full shrink-0">{file.validationError}</span>}
                             </div>
                             <div className="flex items-center text-xs text-gray-500 gap-2 font-mono">
                               <span className="truncate max-w-[40%] text-red-500">/shared_sessions/{file.group}</span>
