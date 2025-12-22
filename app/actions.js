@@ -1,37 +1,9 @@
 'use server';
 
 import nspell from 'nspell';
-import fs from 'fs';
-import path from 'path';
+import dictionary from 'dictionary-en';
 
-// Load dictionary manually to avoid issues with dictionary-en package in bundled environment
-// We expect dictionary files to be in the project root or accessible via process.cwd()
-const loadDictionary = () => {
-    try {
-        const affPath = path.join(process.cwd(), 'dictionary-en', 'index.aff');
-        const dicPath = path.join(process.cwd(), 'dictionary-en', 'index.dic');
-
-        if (fs.existsSync(affPath) && fs.existsSync(dicPath)) {
-            const aff = fs.readFileSync(affPath);
-            const dic = fs.readFileSync(dicPath);
-            return { aff, dic };
-        }
-    } catch (e) {
-        console.error("Failed to load dictionary from local path:", e);
-    }
-
-    // Fallback: Try requiring it if possible, but the issue was with URL usage in dependency
-    // If we are here, we likely need the files to be present.
-    // We will assume the build process copies 'dictionary-en' folder or we ensure it's there.
-    return null;
-};
-
-const dictData = loadDictionary();
-const spell = dictData ? nspell(dictData) : null;
-
-if (!spell) {
-    console.warn("Spell checker could not be initialized. Dictionary files missing.");
-}
+const spell = nspell(dictionary);
 
 const DBX_API_URL = 'https://api.dropboxapi.com/2';
 const DBX_OAUTH_URL = 'https://api.dropboxapi.com/oauth2/token';
@@ -166,7 +138,7 @@ export async function scanDropboxServer() {
 
                             // Spell Check
                             let spellingWarning = null;
-                            if (!validationError && spell) {
+                            if (!validationError) {
                                 const words = titleStr.split(/[^a-zA-Z']+/).filter(w => w.length > 0);
                                 const misspelled = [];
                                 for (const word of words) {
