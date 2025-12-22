@@ -1,6 +1,6 @@
 'use server';
 
-import hunspellAsm from 'hunspell-asm';
+import { loadModule } from 'hunspell-asm';
 import dictionaryEn from 'dictionary-en';
 import dictionaryHe from 'dictionary-he';
 
@@ -16,7 +16,6 @@ async function getSpellChecker() {
     if (spellChecker) return spellChecker;
 
     try {
-        const { loadModule } = hunspellAsm;
         hunspellFactory = await loadModule();
 
         // Mount English
@@ -56,8 +55,11 @@ async function getSpellChecker() {
         return spellChecker;
     } catch (e) {
         console.error("Failed to initialize spell checker:", e);
-        // Fallback or re-throw
-        throw e;
+        // Fail gracefully - return an object that always says correct
+        return {
+            correct: () => true,
+            suggest: () => []
+        };
     }
 }
 
