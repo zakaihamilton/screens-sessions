@@ -1,8 +1,12 @@
 'use server';
 
-import { loadModule } from 'hunspell-asm';
 import dictionaryEn from 'dictionary-en';
 import dictionaryHe from 'dictionary-he';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const hunspellAsm = require('hunspell-asm');
+const { loadModule } = hunspellAsm;
 
 // Singleton for Spell Checker
 let spellChecker = null;
@@ -206,8 +210,6 @@ export async function scanDropboxServer() {
                                 const misspelled = [];
 
                                 for (const word of words) {
-                                    if (/^\d+$/.test(word)) continue;
-
                                     if (!spell.correct(word)) {
                                         const suggestions = spell.suggest(word);
                                         misspelled.push({ word, suggestions });

@@ -2,7 +2,7 @@
 const nextConfig = {
   /* config options here */
   reactCompiler: true,
-  serverExternalPackages: ['dictionary-en'],
+  serverExternalPackages: ['dictionary-en', 'dictionary-he', 'hunspell-asm'],
 };
 
 export default nextConfig;
