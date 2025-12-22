@@ -1,0 +1,46 @@
+
+> screens-sessions@0.1.0 start
+> next start
+
+   ▲ Next.js 16.0.7
+   - Local:         http://localhost:3000
+   - Network:       http://192.168.0.2:3000
+
+ ✓ Starting...
+ ✓ Ready in 610ms
+ ⨯ TypeError: The "path" argument must be of type string or an instance of Buffer or URL. Received an instance of URL
+    at <unknown> (.next/server/chunks/ssr/[root-of-the-server]__531905ed._.js:11:14623)
+    at Context.asyncModule [as a] (.next/server/chunks/ssr/[turbopack]_runtime.js:434:5)
+    at module evaluation (.next/server/chunks/ssr/[root-of-the-server]__531905ed._.js:11:14565)
+    at instantiateModule (.next/server/chunks/ssr/[turbopack]_runtime.js:715:9)
+    at getOrInstantiateModuleFromParent (.next/server/chunks/ssr/[turbopack]_runtime.js:738:12)
+    at Context.esmImport [as i] (.next/server/chunks/ssr/[turbopack]_runtime.js:228:20)
+    at <unknown> (.next/server/chunks/ssr/[root-of-the-server]__531905ed._.js:12:361)
+    at Context.asyncModule [as a] (.next/server/chunks/ssr/[turbopack]_runtime.js:434:5) {
+  code: 'ERR_INVALID_ARG_TYPE',
+  digest: '2592933319'
+}
+ ⨯ TypeError: The "path" argument must be of type string or an instance of Buffer or URL. Received an instance of URL
+    at <unknown> (.next/server/chunks/ssr/[root-of-the-server]__531905ed._.js:11:14623)
+    at Context.asyncModule [as a] (.next/server/chunks/ssr/[turbopack]_runtime.js:434:5)
+    at module evaluation (.next/server/chunks/ssr/[root-of-the-server]__531905ed._.js:11:14565)
+    at instantiateModule (.next/server/chunks/ssr/[turbopack]_runtime.js:715:9)
+    at getOrInstantiateModuleFromParent (.next/server/chunks/ssr/[turbopack]_runtime.js:738:12)
+    at Context.esmImport [as i] (.next/server/chunks/ssr/[turbopack]_runtime.js:228:20)
+    at <unknown> (.next/server/chunks/ssr/[root-of-the-server]__531905ed._.js:12:361)
+    at Context.asyncModule [as a] (.next/server/chunks/ssr/[turbopack]_runtime.js:434:5) {
+  code: 'ERR_INVALID_ARG_TYPE',
+  digest: '2592933319'
+}
+ ⨯ TypeError: The "path" argument must be of type string or an instance of Buffer or URL. Received an instance of URL
+    at <unknown> (.next/server/chunks/ssr/[root-of-the-server]__531905ed._.js:11:14623)
+    at Context.asyncModule [as a] (.next/server/chunks/ssr/[turbopack]_runtime.js:434:5)
+    at module evaluation (.next/server/chunks/ssr/[root-of-the-server]__531905ed._.js:11:14565)
+    at instantiateModule (.next/server/chunks/ssr/[turbopack]_runtime.js:715:9)
+    at getOrInstantiateModuleFromParent (.next/server/chunks/ssr/[turbopack]_runtime.js:738:12)
+    at Context.esmImport [as i] (.next/server/chunks/ssr/[turbopack]_runtime.js:228:20)
+    at <unknown> (.next/server/chunks/ssr/[root-of-the-server]__531905ed._.js:12:361)
+    at Context.asyncModule [as a] (.next/server/chunks/ssr/[turbopack]_runtime.js:434:5) {
+  code: 'ERR_INVALID_ARG_TYPE',
+  digest: '2592933319'
+}
