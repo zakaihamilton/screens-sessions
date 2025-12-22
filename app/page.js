@@ -7,6 +7,7 @@ import {
   MoveRight,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   Loader2,
   RefreshCw,
   FolderOpen,
@@ -221,6 +222,12 @@ export default function App() {
                               <FileAudio className={`w-4 h-4 shrink-0 ${file.isValid ? 'text-purple-500' : 'text-gray-400'}`} />
                               <span className={`text-sm font-medium ${showFullNames ? 'break-words whitespace-normal' : 'truncate'} ${file.isValid ? 'text-gray-700' : 'text-gray-500 line-through'}`}>{file.name}</span>
                               {!file.isValid && <span className="text-xs text-red-600 bg-red-100 px-2 py-0.5 rounded-full shrink-0">{file.validationError}</span>}
+                              {file.isValid && file.spellingWarning && (
+                                <div className="flex items-center gap-1 bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full shrink-0" title={file.spellingWarning}>
+                                  <AlertTriangle className="w-3 h-3" />
+                                  <span className="text-xs">{file.spellingWarning}</span>
+                                </div>
+                              )}
                             </div>
                             <div className="flex items-center text-xs text-gray-500 gap-2 font-mono">
                               <span className="truncate max-w-[40%] text-red-500">/shared_sessions/{file.group}</span>

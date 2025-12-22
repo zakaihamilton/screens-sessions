@@ -1,5 +1,10 @@
 'use server';
 
+import nspell from 'nspell';
+import dictionary from 'dictionary-en';
+
+const spell = nspell(dictionary);
+
 const DBX_API_URL = 'https://api.dropboxapi.com/2';
 const DBX_OAUTH_URL = 'https://api.dropboxapi.com/oauth2/token';
 
@@ -131,6 +136,23 @@ export async function scanDropboxServer() {
                                 validationError = "file name is marked as private";
                             }
 
+                            // Spell Check
+                            let spellingWarning = null;
+                            if (!validationError) {
+                                const words = titleStr.split(/[^a-zA-Z']+/).filter(w => w.length > 0);
+                                const misspelled = [];
+                                for (const word of words) {
+                                    if (/^\d+$/.test(word)) continue;
+
+                                    if (!spell.correct(word)) {
+                                        misspelled.push(word);
+                                    }
+                                }
+                                if (misspelled.length > 0) {
+                                    spellingWarning = `Possible spelling errors: ${misspelled.join(', ')}`;
+                                }
+                            }
+
                             return {
                                 id: f.id,
                                 name: f.name,
@@ -140,7 +162,8 @@ export async function scanDropboxServer() {
                                 year,
                                 destPath,
                                 isValid: !validationError,
-                                validationError
+                                validationError,
+                                spellingWarning
                             };
                         }
                         return null;
