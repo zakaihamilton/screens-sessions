@@ -1,9 +1,72 @@
 'use server';
 
-import nspell from 'nspell';
-import dictionary from 'dictionary-en';
+import dictionaryEn from 'dictionary-en';
+import dictionaryHe from 'dictionary-he';
+import { createRequire } from 'module';
 
-const spell = nspell(dictionary);
+const require = createRequire(import.meta.url);
+const hunspellAsm = require('hunspell-asm');
+const { loadModule } = hunspellAsm;
+
+// Singleton for Spell Checker
+let spellChecker = null;
+let hunspellFactory = null;
+let affPathEn = null;
+let dicPathEn = null;
+let affPathHe = null;
+let dicPathHe = null;
+
+async function getSpellChecker() {
+    if (spellChecker) return spellChecker;
+
+    try {
+        hunspellFactory = await loadModule();
+
+        // Mount English
+        const affEn = new Uint8Array(dictionaryEn.aff);
+        const dicEn = new Uint8Array(dictionaryEn.dic);
+        affPathEn = hunspellFactory.mountBuffer(affEn, 'en.aff');
+        dicPathEn = hunspellFactory.mountBuffer(dicEn, 'en.dic');
+
+        // Mount Hebrew
+        const affHe = new Uint8Array(dictionaryHe.aff);
+        const dicHe = new Uint8Array(dictionaryHe.dic);
+        affPathHe = hunspellFactory.mountBuffer(affHe, 'he.aff');
+        dicPathHe = hunspellFactory.mountBuffer(dicHe, 'he.dic');
+
+        // Create separate checkers or one?
+        // hunspell-asm `create` takes one dictionary pair.
+        // We need to check both. We will create two instances.
+
+        const spellEn = hunspellFactory.create(affPathEn, dicPathEn);
+        const spellHe = hunspellFactory.create(affPathHe, dicPathHe);
+
+        spellChecker = {
+            correct: (word) => {
+                if (/[\u0590-\u05FF]/.test(word)) {
+                    return spellHe.spell(word);
+                }
+                return spellEn.spell(word);
+            },
+            suggest: (word) => {
+                 if (/[\u0590-\u05FF]/.test(word)) {
+                    return spellHe.suggest(word);
+                }
+                return spellEn.suggest(word);
+            }
+        };
+
+        return spellChecker;
+    } catch (e) {
+        console.error("Failed to initialize spell checker:", e);
+        // Fail gracefully - return an object that always says correct
+        return {
+            correct: () => true,
+            suggest: () => []
+        };
+    }
+}
+
 
 const DBX_API_URL = 'https://api.dropboxapi.com/2';
 const DBX_OAUTH_URL = 'https://api.dropboxapi.com/oauth2/token';
@@ -73,6 +136,9 @@ export async function scanDropboxServer() {
         tomorrow.setDate(tomorrow.getDate() + 1);
         const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
+        // Ensure spell checker is initialized
+        const spell = await getSpellChecker();
+
         // 1. List folders in /shared_sessions
         let folders = [];
         let hasMore = true;
@@ -139,17 +205,24 @@ export async function scanDropboxServer() {
                             // Spell Check
                             let spellingWarning = null;
                             if (!validationError) {
-                                const words = titleStr.split(/[^a-zA-Z']+/).filter(w => w.length > 0);
+                                // Split by non-alphabetic and non-hebrew characters
+                                const words = titleStr.split(/[^a-zA-Z\u0590-\u05FF']+/).filter(w => w.length > 0);
                                 const misspelled = [];
-                                for (const word of words) {
-                                    if (/^\d+$/.test(word)) continue;
 
+                                for (const word of words) {
                                     if (!spell.correct(word)) {
-                                        misspelled.push(word);
+                                        const suggestions = spell.suggest(word);
+                                        misspelled.push({ word, suggestions });
                                     }
                                 }
+
                                 if (misspelled.length > 0) {
-                                    spellingWarning = `Possible spelling errors: ${misspelled.join(', ')}`;
+                                    spellingWarning = `Possible spelling errors: ${misspelled.map(m => {
+                                        if (m.suggestions && m.suggestions.length > 0) {
+                                            return `${m.word} (${m.suggestions.slice(0, 3).join(', ')})`;
+                                        }
+                                        return m.word;
+                                    }).join(', ')}`;
                                 }
                             }
 

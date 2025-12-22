@@ -2,6 +2,7 @@
   "name": "screens-sessions",
   "version": "0.1.0",
   "private": true,
+
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,9 +11,10 @@
   },
   "dependencies": {
     "dictionary-en": "^4.0.0",
+    "dictionary-he": "^2.0.0",
+    "hunspell-asm": "^4.0.2",
     "lucide-react": "^0.556.0",
     "next": "^16.0.7",
-    "nspell": "^2.1.5",
     "react": "^19.2.1",
     "react-dom": "^19.2.1"
   },
