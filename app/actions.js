@@ -198,6 +198,8 @@ export async function scanDropboxServer() {
                                 validationError = "Space between title and extension";
                             } else if (titleStr.endsWith('.')) {
                                 validationError = "Double period before extension";
+                            } else if (titleStr.includes('  ')) {
+                                validationError = "Double space in session name";
                             } else if (f.name.toLowerCase().includes('private') || f.name.includes('פרטי')) {
                                 validationError = "file name is marked as private";
                             }
@@ -288,6 +290,10 @@ export async function moveFilesServer(filesToMove) {
 
                     if (titleStr.endsWith('.')) {
                         throw new Error('Security violation: Cannot move files with double period before extension.');
+                    }
+
+                    if (titleStr.includes('  ')) {
+                        throw new Error('Security violation: Cannot move files with double spaces in session name.');
                     }
 
                     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr) && dateStr > tomorrowStr) {
