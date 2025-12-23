@@ -211,7 +211,12 @@ export async function scanDropboxServer() {
                                 const words = titleStr.split(/[^a-zA-Z\u0590-\u05FF']+/).filter(w => w.length > 0);
                                 const misspelled = [];
 
-                                for (const word of words) {
+                                for (const [index, word] of words.entries()) {
+                                    // Allow CTC if it is the prefix (first word)
+                                    if (index === 0 && word === 'CTC') {
+                                        continue;
+                                    }
+
                                     if (!spell.correct(word)) {
                                         const suggestions = spell.suggest(word);
                                         misspelled.push({ word, suggestions });
