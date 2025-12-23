@@ -420,7 +420,7 @@ export default function App() {
                     <FolderOpen className="w-5 h-5 text-white" />
                 </div>
                 <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-blue-600 dark:from-indigo-400 dark:to-blue-400 tracking-tight transition-all">
-                    Screens Manager
+                    System Concepts - New Sessions
                 </h1>
             </div>
 

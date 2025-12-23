@@ -12,7 +12,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Screens Sessions Manager",
+  title: "System Concepts - New Sessions",
   description: "Manage your Screens sessions with ease.",
 };
 
