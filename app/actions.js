@@ -177,7 +177,44 @@ export async function scanDropboxServer() {
                     gHasMore = result.has_more;
                 }
 
-                // 3. Filter and Map
+                // 3. Check for existing files in destination
+                const neededYears = new Set();
+                groupFiles.forEach(f => {
+                    if (f['.tag'] === 'file') {
+                        const match = f.name.match(regex);
+                        if (match) {
+                            neededYears.add(match[1].split('-')[0]);
+                        }
+                    }
+                });
+
+                const existingDestPaths = new Set();
+                for (const year of neededYears) {
+                    const destYearPath = `/sessions/${groupName}/${year}`;
+                    try {
+                        let dHasMore = true;
+                        let dCursor = null;
+                        while (dHasMore) {
+                            const result = await dbxRpc(
+                                dCursor ? '/files/list_folder/continue' : '/files/list_folder',
+                                dCursor ? { cursor: dCursor } : { path: destYearPath, recursive: false },
+                                token
+                            );
+
+                            result.entries.forEach(e => {
+                                if (e['.tag'] === 'file') {
+                                    existingDestPaths.add(e.path_lower);
+                                }
+                            });
+                            dCursor = result.cursor;
+                            dHasMore = result.has_more;
+                        }
+                    } catch (e) {
+                        // Ignore error (folder likely doesn't exist yet)
+                    }
+                }
+
+                // 4. Filter and Map
                 const validFiles = groupFiles
                     .filter(f => f['.tag'] === 'file')
                     .map(f => {
@@ -202,6 +239,8 @@ export async function scanDropboxServer() {
                                 validationError = "Double space in session name";
                             } else if (f.name.toLowerCase().includes('private') || f.name.includes('פרטי')) {
                                 validationError = "file name is marked as private";
+                            } else if (existingDestPaths.has(destPath.toLowerCase())) {
+                                validationError = "File already exists in destination";
                             }
 
                             // Spell Check
@@ -326,7 +365,7 @@ export async function moveFilesServer(filesToMove) {
         for (const chunk of chunks) {
             const startResult = await dbxRpc('/files/move_batch_v2', {
                 entries: chunk,
-                autorename: true
+                autorename: false
             }, token);
 
             let jobResult = null;
