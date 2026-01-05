@@ -282,12 +282,40 @@ export async function scanDropboxServer() {
                                 destPath,
                                 isValid: !validationError,
                                 validationError,
-                                spellingWarning
+                                spellingWarning,
+                                datePart: dateStr,
+                                titlePart: titleStr
                             };
                         }
                         return null;
                     })
                     .filter(Boolean);
+
+                // 5. Post-process for case sensitivity consistency
+                const caseCheckGroups = {};
+                validFiles.forEach(f => {
+                    const key = `${f.datePart}|${f.titlePart.toLowerCase()}`;
+                    if (!caseCheckGroups[key]) {
+                        caseCheckGroups[key] = [];
+                    }
+                    caseCheckGroups[key].push(f);
+                });
+
+                for (const key in caseCheckGroups) {
+                    const files = caseCheckGroups[key];
+                    if (files.length > 1) {
+                        const firstTitle = files[0].titlePart;
+                        const hasMismatch = files.some(f => f.titlePart !== firstTitle);
+                        if (hasMismatch) {
+                            files.forEach(f => {
+                                f.isValid = false;
+                                f.validationError = f.validationError
+                                    ? `${f.validationError}, Case mismatch between files`
+                                    : "Case mismatch between files";
+                            });
+                        }
+                    }
+                }
 
                 if (validFiles.length > 0) {
                     foundGroups[groupName] = validFiles;
