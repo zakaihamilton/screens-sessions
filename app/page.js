@@ -85,7 +85,7 @@ export default function App() {
       // Auto-select all valid files
       const allIds = new Set();
       Object.values(foundGroups).flat().forEach(f => {
-        if (f.isValid && !f.spellingWarning) {
+        if (f.isValid && !f.spellingWarning && !f.isOld) {
           allIds.add(f.id);
         }
       });
