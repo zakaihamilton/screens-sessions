@@ -136,6 +136,10 @@ export async function scanDropboxServer() {
         tomorrow.setDate(tomorrow.getDate() + 1);
         const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
+        const nineMonthsAgo = new Date(today);
+        nineMonthsAgo.setMonth(nineMonthsAgo.getMonth() - 9);
+        const nineMonthsAgoStr = nineMonthsAgo.toISOString().split('T')[0];
+
         // Ensure spell checker is initialized
         const spell = await getSpellChecker();
 
@@ -245,7 +249,17 @@ export async function scanDropboxServer() {
 
                             // Spell Check
                             let spellingWarning = null;
+                            let isOld = false;
+
                             if (!validationError) {
+                                // Check if old session
+                                if (dateStr < nineMonthsAgoStr) {
+                                    isOld = true;
+                                    spellingWarning = spellingWarning
+                                        ? `${spellingWarning}. Session is older than 9 months`
+                                        : "Session is older than 9 months";
+                                }
+
                                 // Split by non-alphabetic and non-hebrew characters
                                 const words = titleStr.split(/[^a-zA-Z\u0590-\u05FF']+/).filter(w => w.length > 0);
                                 const misspelled = [];
@@ -263,12 +277,14 @@ export async function scanDropboxServer() {
                                 }
 
                                 if (misspelled.length > 0) {
-                                    spellingWarning = `Possible spelling errors: ${misspelled.map(m => {
+                                    const spellMsg = `Possible spelling errors: ${misspelled.map(m => {
                                         if (m.suggestions && m.suggestions.length > 0) {
                                             return `${m.word} (${m.suggestions.slice(0, 3).join(', ')})`;
                                         }
                                         return m.word;
                                     }).join(', ')}`;
+
+                                    spellingWarning = spellingWarning ? `${spellingWarning}. ${spellMsg}` : spellMsg;
                                 }
                             }
 
@@ -283,6 +299,7 @@ export async function scanDropboxServer() {
                                 isValid: !validationError,
                                 validationError,
                                 spellingWarning,
+                                isOld,
                                 datePart: dateStr,
                                 titlePart: titleStr
                             };
