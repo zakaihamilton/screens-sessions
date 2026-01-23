@@ -240,7 +240,18 @@ export async function scanDropboxServer() {
                             } else if (titleStr.endsWith('.')) {
                                 validationError = "Double period before extension";
                             } else if (titleStr.includes('  ')) {
-                                validationError = "Double space in session name";
+                                const doubleSpaceIndex = titleStr.indexOf('  ');
+                                const preContext = titleStr.substring(0, doubleSpaceIndex);
+                                const postContext = titleStr.substring(doubleSpaceIndex + 2);
+
+                                const wordBefore = preContext.trim().split(/\s+/).pop() || '[START]';
+                                const wordAfter = postContext.trim().split(/\s+/)[0] || '[END]';
+
+                                const startDebug = Math.max(0, doubleSpaceIndex - 2);
+                                const endDebug = Math.min(titleStr.length, doubleSpaceIndex + 4);
+                                const debugChars = titleStr.substring(startDebug, endDebug).split('').map(c => `'${c}'(\\u${c.charCodeAt(0).toString(16).toUpperCase().padStart(4, '0')})`).join(' ');
+
+                                validationError = `Double space in session name between '${wordBefore}' and '${wordAfter}'. Characters: ${debugChars}`;
                             } else if (f.name.toLowerCase().includes('private') || f.name.includes('פרטי')) {
                                 validationError = "file name is marked as private";
                             } else if (existingDestPaths.has(destPath.toLowerCase())) {
