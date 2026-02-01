@@ -241,6 +241,8 @@ export async function scanDropboxServer() {
                                 validationError = "Double period before extension";
                             } else if (titleStr.includes('  ')) {
                                 validationError = "Double space in session name";
+                            } else if (titleStr.startsWith('-')) {
+                                validationError = "Session name cannot start with a hyphen";
                             } else if (f.name.toLowerCase().includes('private') || f.name.includes('פרטי')) {
                                 validationError = "file name is marked as private";
                             } else if (existingDestPaths.has(destPath.toLowerCase())) {
@@ -383,6 +385,10 @@ export async function moveFilesServer(filesToMove) {
 
                     if (titleStr.includes('  ')) {
                         throw new Error('Security violation: Cannot move files with double spaces in session name.');
+                    }
+
+                    if (titleStr.startsWith('-')) {
+                        throw new Error('Security violation: Cannot move files with session name starting with a hyphen.');
                     }
 
                     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr) && dateStr > tomorrowStr) {
