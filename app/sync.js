@@ -93,3 +93,19 @@ export async function cancelSyncAction() {
         return { status: "error", message: error.message };
     }
 }
+
+export async function clearHistoryAction() {
+    try {
+        let sanitizedUrl = SYNC_URL.trim().replace(/\/$/, "");
+        if (!sanitizedUrl.startsWith('http')) sanitizedUrl = `https://${sanitizedUrl}`;
+
+        const response = await fetch(`${sanitizedUrl}/clear-history`, {
+            method: "POST",
+            headers: { "x-api-key": SYNC_SECRET },
+            cache: 'no-store',
+        });
+        return await response.json();
+    } catch (error) {
+        return { status: "error", message: error.message };
+    }
+}
