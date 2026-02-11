@@ -258,10 +258,11 @@ export default function App() {
           clearInterval(interval);
         }
         else if (data.status === 'FAILED') {
-          setError("Sync failed.");
-          if (view === 'processing') {
-            setView('start');
-          }
+          const errMsg = data.error || 'Sync failed.';
+          setError(errMsg);
+          setLogs(prev => [...prev, { msg: `❌ ${errMsg}`, type: 'error', time: new Date().toLocaleTimeString() }]);
+          // keep the user on the processing/logs view so they can inspect the error
+          // (do not change `view` here)
           setConnectedJobId(null);
           clearInterval(interval);
         }
@@ -654,6 +655,23 @@ export default function App() {
                   </button>
                 )}
               </div>
+              {error && (
+                <div className="w-full mb-3 p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5" />
+                      <div className="text-sm font-medium">{error}</div>
+                    </div>
+                    <button
+                      onClick={() => setError(null)}
+                      className="text-sm text-red-600 dark:text-red-300 hover:underline"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div ref={logsRef} className="w-full bg-slate-900 p-4 rounded-lg font-mono text-xs text-slate-300 h-96 overflow-y-auto">
                 {logs.map((l, i) => <div key={i} className="mb-1">[{l.time}] $ {l.msg}</div>)}
               </div>
