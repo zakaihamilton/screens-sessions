@@ -42,6 +42,7 @@ export default function App() {
   const [showFullNames, setShowFullNames] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const logsRef = useRef(null);
+  const prevLogsSnapshotRef = useRef('');
 
   useEffect(() => {
     if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -241,9 +242,24 @@ export default function App() {
   }, [view, connectedJobId, syncType]);
 
   useEffect(() => {
-    if (logsRef.current && view === 'processing') {
-      logsRef.current.scrollTop = logsRef.current.scrollHeight;
+    if (!logsRef.current) {
+      prevLogsSnapshotRef.current = JSON.stringify(logs);
+      return;
     }
+
+    if (view !== 'processing') {
+      // keep snapshot in sync when not viewing processing
+      prevLogsSnapshotRef.current = JSON.stringify(logs);
+      return;
+    }
+
+    const snapshot = logs.map(l => `${l.time}|${l.msg}`).join('\n');
+    // If nothing changed, don't force scroll
+    if (snapshot === prevLogsSnapshotRef.current) return;
+
+    // Only auto-scroll when new content appears
+    logsRef.current.scrollTop = logsRef.current.scrollHeight;
+    prevLogsSnapshotRef.current = snapshot;
   }, [logs, view]);
 
   const downloadLogs = () => {
