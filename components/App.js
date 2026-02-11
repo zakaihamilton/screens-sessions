@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   WrapText
 } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Trash2 } from 'lucide-react';
 
 import { startFullSyncProcess, getSyncStatus, getSyncHistory, cancelSyncAction, clearHistoryAction } from '../app/sync';
@@ -644,8 +645,12 @@ export default function App() {
                   <ExternalLink className="w-4 h-4" /> Download Logs
                 </button>
                 {view !== 'done' && (
-                  <button onClick={handleCancelSync} className="text-sm text-red-600 dark:text-red-400 hover:underline font-semibold">
-                    Cancel Sync
+                  <button
+                    onClick={handleCancelSync}
+                    className="px-3 py-1.5 text-sm rounded-lg bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-800 transition-colors flex items-center gap-2 font-semibold"
+                  >
+                    <X className="w-4 h-4 text-red-600 dark:text-red-300" />
+                    <span>Cancel Sync</span>
                   </button>
                 )}
               </div>
