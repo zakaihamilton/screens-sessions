@@ -49,7 +49,7 @@ async function getSpellChecker() {
                 return spellEn.spell(word);
             },
             suggest: (word) => {
-                 if (/[\u0590-\u05FF]/.test(word)) {
+                if (/[\u0590-\u05FF]/.test(word)) {
                     return spellHe.suggest(word);
                 }
                 return spellEn.suggest(word);
@@ -247,6 +247,8 @@ export async function scanDropboxServer() {
                                 validationError = "file name is marked as private";
                             } else if (existingDestPaths.has(destPath.toLowerCase())) {
                                 validationError = "File already exists in destination";
+                            } else if (/\.\w+\.\w+$/.test(f.name)) {
+                                validationError = "Double extension detected (e.g., .mp4.m4a)";
                             }
 
                             // Spell Check
@@ -392,7 +394,7 @@ export async function moveFilesServer(filesToMove) {
                     }
 
                     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr) && dateStr > tomorrowStr) {
-                         throw new Error('Security violation: Cannot move files with future dates.');
+                        throw new Error('Security violation: Cannot move files with future dates.');
                     }
                 }
             }
