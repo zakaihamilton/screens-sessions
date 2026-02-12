@@ -462,3 +462,12 @@ export async function moveFilesServer(filesToMove) {
         return { success: false, error: error.message };
     }
 }
+
+export async function getDropboxTokenForSync() {
+    try {
+        return await getAccessToken();
+    } catch (error) {
+        console.error("Failed to get token for sync handoff:", error);
+        throw error;
+    }
+}

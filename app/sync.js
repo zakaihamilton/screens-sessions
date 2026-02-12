@@ -1,5 +1,7 @@
 "use server";
 
+import { getDropboxTokenForSync } from "./dropbox"; // Import the token helper
+
 const SYNC_URL = process.env.SYNC_API_URL;
 const SYNC_SECRET = process.env.SYNC_API_SECRET;
 
@@ -7,21 +9,25 @@ export async function startFullSyncProcess() {
     console.log(">>> Wasabi Sync Started");
 
     try {
-        // 1. URL Sanitization: Ensure it starts with https:// and has no trailing slash
-        if (!SYNC_URL) throw new Error("SYNC_API_URL is not defined in environment variables.");
+        if (!SYNC_URL) throw new Error("SYNC_API_URL is not defined.");
 
+        // 1. Get the fresh Dropbox Access Token
+        const dbToken = await getDropboxTokenForSync();
+
+        // 2. URL Sanitization
         let sanitizedUrl = SYNC_URL.trim();
         if (!sanitizedUrl.startsWith('http')) {
             sanitizedUrl = `https://${sanitizedUrl}`;
         }
         sanitizedUrl = sanitizedUrl.replace(/\/$/, "");
 
-        // 2. Trigger Railway Sync using the sanitized URL
+        // 3. Trigger Railway Sync with the Token Header
         console.log(`>>> Triggering Railway at: ${sanitizedUrl}/sync`);
         const response = await fetch(`${sanitizedUrl}/sync`, {
             method: "POST",
             headers: {
                 "x-api-key": SYNC_SECRET,
+                "x-db-token": dbToken, // <--- Handing off the token here
                 "Content-Type": "application/json"
             },
             cache: 'no-store',
