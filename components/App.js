@@ -44,6 +44,7 @@ export default function App() {
   const [showFullNames, setShowFullNames] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showClearHistoryDialog, setShowClearHistoryDialog] = useState(false);
+  const [autoScroll, setAutoScroll] = useState(true);
   const logsRef = useRef(null);
   const prevLogsSnapshotRef = useRef('');
 
@@ -288,9 +289,17 @@ export default function App() {
     if (snapshot === prevLogsSnapshotRef.current) return;
 
     // Only auto-scroll when new content appears
-    logsRef.current.scrollTop = logsRef.current.scrollHeight;
+    if (autoScroll) {
+      logsRef.current.scrollTop = logsRef.current.scrollHeight;
+    }
     prevLogsSnapshotRef.current = snapshot;
-  }, [logs, view]);
+  }, [logs, view, autoScroll]);
+
+  useEffect(() => {
+    if (autoScroll && logsRef.current) {
+      logsRef.current.scrollTop = logsRef.current.scrollHeight;
+    }
+  }, [autoScroll]);
 
   const downloadLogs = () => {
     const logsText = logs.map(l => `[${l.time}] $ ${l.msg}`).join('\n');
@@ -642,9 +651,18 @@ export default function App() {
                 </h3>
               </div>
               <div className="w-full flex justify-between items-center mb-2 gap-2">
-                <button onClick={downloadLogs} className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
-                  <ExternalLink className="w-4 h-4" /> Download Logs
-                </button>
+                <div className="flex items-center gap-4">
+                  <button onClick={downloadLogs} className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+                    <ExternalLink className="w-4 h-4" /> Download Logs
+                  </button>
+                  <button
+                    onClick={() => setAutoScroll(!autoScroll)}
+                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 flex items-center gap-1 transition-colors"
+                  >
+                    {autoScroll ? <CheckSquare className="w-4 h-4 text-indigo-600 dark:text-indigo-400" /> : <Square className="w-4 h-4" />}
+                    <span>Auto-scroll</span>
+                  </button>
+                </div>
                 {view !== 'done' && (
                   <button
                     onClick={handleCancelSync}
