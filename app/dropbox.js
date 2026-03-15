@@ -245,6 +245,8 @@ export async function scanDropboxServer() {
                                 validationError = "Session name cannot start with a hyphen";
                             } else if (f.name.toLowerCase().includes('private') || f.name.includes('פרטי')) {
                                 validationError = "file name is marked as private";
+                            } else if (/(?![a-zA-Z\u0590-\u05FF])\p{L}/u.test(titleStr)) {
+                                validationError = "Session name contains non-standard letters";
                             } else if (existingDestPaths.has(destPath.toLowerCase())) {
                                 validationError = "File already exists in destination";
                             } else if (/\.\w+\.\w+$/.test(f.name)) {
@@ -391,6 +393,10 @@ export async function moveFilesServer(filesToMove) {
 
                     if (titleStr.startsWith('-')) {
                         throw new Error('Security violation: Cannot move files with session name starting with a hyphen.');
+                    }
+
+                    if (/(?![a-zA-Z\u0590-\u05FF])\p{L}/u.test(titleStr)) {
+                        throw new Error('Security violation: Cannot move files with non-standard letters.');
                     }
 
                     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr) && dateStr > tomorrowStr) {
