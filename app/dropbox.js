@@ -243,8 +243,6 @@ export async function scanDropboxServer() {
                                 validationError = "Double space in session name";
                             } else if (titleStr.startsWith('-')) {
                                 validationError = "Session name cannot start with a hyphen";
-                            } else if (f.name.toLowerCase().includes('private') || f.name.includes('פרטי')) {
-                                validationError = "file name is marked as private";
                             } else if (existingDestPaths.has(destPath.toLowerCase())) {
                                 validationError = "File already exists in destination";
                             } else if (/\.\w+\.\w+$/.test(f.name)) {
@@ -253,7 +251,12 @@ export async function scanDropboxServer() {
 
                             // Spell Check
                             let spellingWarning = null;
+                            let privacyWarning = null;
                             let isOld = false;
+
+                            if (f.name.toLowerCase().includes('private') || f.name.includes('פרטי')) {
+                                privacyWarning = "file name is marked as private";
+                            }
 
                             if (!validationError) {
                                 // Check if old session
@@ -303,6 +306,7 @@ export async function scanDropboxServer() {
                                 isValid: !validationError,
                                 validationError,
                                 spellingWarning,
+                                privacyWarning,
                                 isOld,
                                 datePart: dateStr,
                                 titlePart: titleStr
@@ -370,9 +374,6 @@ export async function moveFilesServer(filesToMove) {
             }
             if (!f.destPath.startsWith('/sessions/')) {
                 throw new Error('Security violation: Invalid destination path. Destination files must be in /sessions/.');
-            }
-            if (f.name && (f.name.toLowerCase().includes('private') || f.name.includes('פרטי'))) {
-                throw new Error('Security violation: Cannot move files marked as private.');
             }
 
             // Check for future dates and double period

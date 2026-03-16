@@ -133,7 +133,7 @@ export default function App() {
       // Auto-select all valid files
       const allIds = new Set();
       Object.values(foundGroups).flat().forEach(f => {
-        if (f.isValid && !f.spellingWarning && !f.isOld) {
+        if (f.isValid && !f.spellingWarning && !f.isOld && !f.privacyWarning) {
           allIds.add(f.id);
         }
       });
@@ -551,6 +551,13 @@ export default function App() {
                                 <div className="inline-flex items-center gap-1 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full shrink-0" title={file.spellingWarning}>
                                   <AlertTriangle className="w-3 h-3" />
                                   <span className="text-xs font-medium">{file.spellingWarning}</span>
+                                </div>
+                              )}
+
+                              {file.isValid && file.privacyWarning && (
+                                <div className="inline-flex items-center gap-1 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800 px-2 py-0.5 rounded-full shrink-0" title={file.privacyWarning}>
+                                  <AlertTriangle className="w-3 h-3" />
+                                  <span className="text-xs font-medium">{file.privacyWarning}</span>
                                 </div>
                               )}
                             </div>
