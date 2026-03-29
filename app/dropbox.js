@@ -245,7 +245,7 @@ export async function scanDropboxServer() {
                                 validationError = "Session name cannot start with a hyphen";
                             } else if (existingDestPaths.has(destPath.toLowerCase())) {
                                 validationError = "File already exists in destination";
-                            } else if (/\.\w+\.\w+$/.test(f.name)) {
+                            } else if (/\.(?:mp4|m4a)\.(?:mp4|m4a)$/i.test(f.name)) {
                                 validationError = "Double extension detected (e.g., .mp4.m4a)";
                             }
 
