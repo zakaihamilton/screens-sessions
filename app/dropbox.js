@@ -272,8 +272,8 @@ export async function scanDropboxServer() {
                                 const misspelled = [];
 
                                 for (const [index, word] of words.entries()) {
-                                    // Allow CTC if it is the prefix (first word)
-                                    if (index === 0 && word === 'CTC') {
+                                    // Allow CTC and TES
+                                    if (word === 'CTC' || word === 'TES') {
                                         continue;
                                     }
 
