@@ -136,9 +136,9 @@ export async function scanDropboxServer() {
         tomorrow.setDate(tomorrow.getDate() + 1);
         const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
-        const nineMonthsAgo = new Date(today);
-        nineMonthsAgo.setMonth(nineMonthsAgo.getMonth() - 9);
-        const nineMonthsAgoStr = nineMonthsAgo.toISOString().split('T')[0];
+        const threeWeeksAgo = new Date(today);
+        threeWeeksAgo.setDate(threeWeeksAgo.getDate() - 21);
+        const threeWeeksAgoStr = threeWeeksAgo.toISOString().split('T')[0];
 
         // Ensure spell checker is initialized
         const spell = await getSpellChecker();
@@ -260,11 +260,11 @@ export async function scanDropboxServer() {
 
                             if (!validationError) {
                                 // Check if old session
-                                if (dateStr < nineMonthsAgoStr) {
+                                if (dateStr < threeWeeksAgoStr) {
                                     isOld = true;
                                     spellingWarning = spellingWarning
-                                        ? `${spellingWarning}. Session is older than 9 months`
-                                        : "Session is older than 9 months";
+                                        ? `${spellingWarning}. Session is older than 3 weeks`
+                                        : "Session is older than 3 weeks";
                                 }
 
                                 // Split by non-alphabetic and non-hebrew characters
