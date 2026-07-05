@@ -133,7 +133,7 @@ export default function App() {
       // Auto-select all valid files
       const allIds = new Set();
       Object.values(foundGroups).flat().forEach(f => {
-        if (f.isValid && !f.spellingWarning && !f.isOld && !f.privacyWarning) {
+        if (f.isValid && !f.spellingWarning && !f.isOld && !f.privacyWarning && !f.hebrewPunctuationWarning) {
           allIds.add(f.id);
         }
       });
@@ -558,6 +558,13 @@ export default function App() {
                                 <div className="inline-flex items-center gap-1 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800 px-2 py-0.5 rounded-full shrink-0" title={file.privacyWarning}>
                                   <AlertTriangle className="w-3 h-3" />
                                   <span className="text-xs font-medium">{file.privacyWarning}</span>
+                                </div>
+                              )}
+
+                              {file.isValid && file.hebrewPunctuationWarning && (
+                                <div className="inline-flex items-center gap-1 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-800 px-2 py-0.5 rounded-full shrink-0" title={file.hebrewPunctuationWarning}>
+                                  <AlertTriangle className="w-3 h-3" />
+                                  <span className="text-xs font-medium">{file.hebrewPunctuationWarning}</span>
                                 </div>
                               )}
                             </div>

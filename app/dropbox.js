@@ -252,10 +252,15 @@ export async function scanDropboxServer() {
                             // Spell Check
                             let spellingWarning = null;
                             let privacyWarning = null;
+                            let hebrewPunctuationWarning = null;
                             let isOld = false;
 
                             if (f.name.toLowerCase().includes('private') || f.name.includes('פרטי')) {
                                 privacyWarning = "file name is marked as private";
+                            }
+
+                            if (/[\u0590-\u05FF]/.test(titleStr) && /[^a-zA-Z0-9\u0590-\u05FF\s']/.test(titleStr)) {
+                                hebrewPunctuationWarning = "Hebrew title contains punctuation";
                             }
 
                             if (!validationError) {
@@ -307,6 +312,7 @@ export async function scanDropboxServer() {
                                 validationError,
                                 spellingWarning,
                                 privacyWarning,
+                                hebrewPunctuationWarning,
                                 isOld,
                                 datePart: dateStr,
                                 titlePart: titleStr
