@@ -78,8 +78,8 @@ export default function ProcessingView({
       )}
 
       <div ref={logsRef} className={styles.logs}>
-        {logs.map((l, index) => (
-          <div key={`${l.time}-${l.msg}-${index}`} className={styles.logLine}>
+        {logs.map((l) => (
+          <div key={`${l.time}|${l.msg}|${l.type}`} className={styles.logLine}>
             [{l.time}] $ {l.msg}
           </div>
         ))}

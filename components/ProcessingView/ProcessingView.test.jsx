@@ -1,6 +1,6 @@
-import { createRef } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { createRef } from 'react';
 import ProcessingView from './ProcessingView';
 
 describe('ProcessingView', () => {
@@ -35,7 +35,11 @@ describe('ProcessingView', () => {
     const user = userEvent.setup();
 
     render(
-      <ProcessingView {...defaultProps} error="Something went wrong" onDismissError={onDismissError} />,
+      <ProcessingView
+        {...defaultProps}
+        error="Something went wrong"
+        onDismissError={onDismissError}
+      />,
     );
 
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();

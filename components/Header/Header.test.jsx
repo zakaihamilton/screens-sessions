@@ -5,7 +5,12 @@ import Header from './Header';
 describe('Header', () => {
   it('renders the app title and navigation tabs', () => {
     render(
-      <Header activeTab="dashboard" theme="light" onTabChange={jest.fn()} onToggleTheme={jest.fn()} />,
+      <Header
+        activeTab="dashboard"
+        theme="light"
+        onTabChange={jest.fn()}
+        onToggleTheme={jest.fn()}
+      />,
     );
 
     expect(screen.getByRole('heading', { name: 'Session Sync' })).toBeInTheDocument();
@@ -18,7 +23,12 @@ describe('Header', () => {
     const user = userEvent.setup();
 
     render(
-      <Header activeTab="dashboard" theme="light" onTabChange={onTabChange} onToggleTheme={jest.fn()} />,
+      <Header
+        activeTab="dashboard"
+        theme="light"
+        onTabChange={onTabChange}
+        onToggleTheme={jest.fn()}
+      />,
     );
 
     await user.click(screen.getByRole('button', { name: /history/i }));
