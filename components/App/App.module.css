@@ -1,0 +1,38 @@
+.page {
+  min-height: 100vh;
+  background: var(--color-bg);
+  transition:
+    background 0.3s,
+    color 0.3s;
+}
+
+.main {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.errorBanner {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-md);
+  background: var(--color-red-light);
+  border: 1px solid var(--color-red-border);
+  color: var(--color-red-text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.dismissButton {
+  font-size: 0.875rem;
+  color: var(--color-red-text);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  flex-shrink: 0;
+}
