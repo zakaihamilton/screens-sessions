@@ -2,6 +2,12 @@ import { CheckSquare, Folder, Square } from 'lucide-react';
 import styles from './FileGroup.module.css';
 import FileRow from './FileRow';
 
+function compareFiles(a, b) {
+  const dateCompare = (a.datePart || '').localeCompare(b.datePart || '');
+  if (dateCompare !== 0) return dateCompare;
+  return a.name.localeCompare(b.name);
+}
+
 export default function FileGroup({
   groupName,
   files,
@@ -10,7 +16,8 @@ export default function FileGroup({
   onToggleGroup,
   onToggleSelect,
 }) {
-  const validFiles = files.filter((f) => f.isValid);
+  const sortedFiles = [...files].sort(compareFiles);
+  const validFiles = sortedFiles.filter((f) => f.isValid);
   const groupIds = validFiles.map((f) => f.id);
   const allSelected = validFiles.length > 0 && groupIds.every((id) => selectedFiles.has(id));
   const someSelected = validFiles.length > 0 && groupIds.some((id) => selectedFiles.has(id));
@@ -43,11 +50,11 @@ export default function FileGroup({
           <span className={styles.groupName}>{groupName}</span>
         </div>
 
-        <span className={styles.itemCount}>{files.length} items</span>
+        <span className={styles.itemCount}>{sortedFiles.length} items</span>
       </div>
 
       <div className={styles.fileList}>
-        {files.map((file) => (
+        {sortedFiles.map((file) => (
           <FileRow
             key={file.id}
             file={file}

@@ -357,6 +357,11 @@ export async function scanDropboxServer() {
         }
 
         if (validFiles.length > 0) {
+          validFiles.sort((a, b) => {
+            const dateCompare = (a.datePart || '').localeCompare(b.datePart || '');
+            if (dateCompare !== 0) return dateCompare;
+            return a.name.localeCompare(b.name);
+          });
           foundGroups[groupName] = validFiles;
         }
       } catch (err) {

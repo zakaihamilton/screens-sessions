@@ -12,7 +12,7 @@ export default function ReviewScreen({
   onToggleSelect,
   onToggleGroup,
 }) {
-  const groupKeys = Object.keys(groups);
+  const groupKeys = Object.keys(groups).sort((a, b) => a.localeCompare(b));
   const totalFiles = groupKeys.reduce((acc, key) => acc + groups[key].length, 0);
 
   return (

@@ -45,6 +45,53 @@ describe('FileGroup', () => {
     expect(screen.getByText('invalid.mp3')).toBeInTheDocument();
   });
 
+  it('sorts files by date then name', () => {
+    const unsortedFiles = [
+      {
+        id: 'file-3',
+        name: '2024-05-12 Later Session.mp3',
+        isValid: true,
+        group: 'sessions',
+        datePart: '2024-05-12',
+        destPath: '/dest/later.mp3',
+      },
+      {
+        id: 'file-1',
+        name: '2024-05-10 Earlier Session.mp3',
+        isValid: true,
+        group: 'sessions',
+        datePart: '2024-05-10',
+        destPath: '/dest/earlier.mp3',
+      },
+      {
+        id: 'file-2',
+        name: '2024-05-10 Same Day B.mp3',
+        isValid: true,
+        group: 'sessions',
+        datePart: '2024-05-10',
+        destPath: '/dest/same-day-b.mp3',
+      },
+    ];
+
+    render(
+      <FileGroup
+        groupName="sessions"
+        files={unsortedFiles}
+        selectedFiles={new Set()}
+        showFullNames={false}
+        onToggleGroup={jest.fn()}
+        onToggleSelect={jest.fn()}
+      />,
+    );
+
+    const renderedNames = screen.getAllByText(/^2024-05-\d{2} /).map((el) => el.textContent);
+    expect(renderedNames).toEqual([
+      '2024-05-10 Earlier Session.mp3',
+      '2024-05-10 Same Day B.mp3',
+      '2024-05-12 Later Session.mp3',
+    ]);
+  });
+
   it('calls onToggleGroup when header is clicked', async () => {
     const onToggleGroup = jest.fn();
     const user = userEvent.setup();
