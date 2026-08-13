@@ -126,6 +126,13 @@ async function dbxRpc(endpoint, body, token) {
   return response.json();
 }
 
+function getTomorrowStr() {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return tomorrow.toISOString().split('T')[0];
+}
+
 // --- Action: Scan Dropbox ---
 export async function scanDropboxServer() {
   try {
@@ -133,9 +140,7 @@ export async function scanDropboxServer() {
     const regex = /([0-9]*-[0-9]*-[0-9]*) (.*)\.(.*)/;
 
     const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    const tomorrowStr = getTomorrowStr();
 
     const threeWeeksAgo = new Date(today);
     threeWeeksAgo.setDate(threeWeeksAgo.getDate() - 21);
@@ -380,10 +385,7 @@ export async function scanDropboxServer() {
 export async function moveFilesServer(filesToMove) {
   try {
     const regex = /([0-9]*-[0-9]*-[0-9]*) (.*)\.(.*)/;
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    const tomorrowStr = getTomorrowStr();
 
     // Validate paths for security
     for (const f of filesToMove) {

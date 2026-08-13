@@ -1,0 +1,15 @@
+{
+  "ignores": [
+    "node_modules",
+    "playwright-report",
+    "test-results",
+    "coverage",
+    "dist",
+    "build",
+    ".next",
+    ".turbo",
+    ".git",
+    ".repnix",
+    "generated"
+  ]
+}

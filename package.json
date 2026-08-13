@@ -11,7 +11,13 @@
     "lint:biome": "biome check .",
     "format": "biome check --write .",
     "test": "jest",
-    "test:run": "jest --ci"
+    "test:run": "jest --ci",
+    "health": "repnix check",
+    "health:dead-code": "knip",
+    "health:duplication": "jscpd app",
+    "health:coverage": "c8 --all --reporter=text npm run test",
+    "health:licenses": "license-checker --json",
+    "health:documentation": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#playwright-report\" \"#test-results\" \"#coverage\" \"#dist\" \"#build\" \"#.next\" \"#.turbo\" \"#.git\" \"#.repnix\" \"#generated\""
   },
   "dependencies": {
     "dictionary-en": "^4.0.0",
@@ -30,11 +36,17 @@
     "@testing-library/user-event": "^14.6.1",
     "babel-plugin-react-compiler": "^1.0.0",
     "baseline-browser-mapping": "^2.10.42",
+    "c8": "^12.0.0",
     "eslint": "^9.39.1",
     "eslint-config-next": "16.2.10",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
+    "jscpd": "^5.0.14",
     "jsdom": "^29.1.1",
+    "knip": "^6.32.2",
+    "license-checker": "^25.0.1",
+    "markdownlint-cli2": "^0.23.2",
+    "repnix": "^0.3.6",
     "typescript": "^6.0.3"
   }
 }

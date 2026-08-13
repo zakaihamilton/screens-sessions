@@ -83,12 +83,10 @@ export async function getSyncHistory() {
   }
 }
 
-export async function cancelSyncAction() {
+async function postToSyncEndpoint(endpoint) {
   try {
-    let sanitizedUrl = SYNC_URL.trim().replace(/\/$/, '');
-    if (!sanitizedUrl.startsWith('http')) sanitizedUrl = `https://${sanitizedUrl}`;
-
-    const response = await fetch(`${sanitizedUrl}/cancel`, {
+    const sanitizedUrl = getSanitizedSyncUrl();
+    const response = await fetch(`${sanitizedUrl}${endpoint}`, {
       method: 'POST',
       headers: { 'x-api-key': SYNC_SECRET },
       cache: 'no-store',
@@ -99,18 +97,16 @@ export async function cancelSyncAction() {
   }
 }
 
-export async function clearHistoryAction() {
-  try {
-    let sanitizedUrl = SYNC_URL.trim().replace(/\/$/, '');
-    if (!sanitizedUrl.startsWith('http')) sanitizedUrl = `https://${sanitizedUrl}`;
+function getSanitizedSyncUrl() {
+  let sanitizedUrl = SYNC_URL.trim().replace(/\/$/, '');
+  if (!sanitizedUrl.startsWith('http')) sanitizedUrl = `https://${sanitizedUrl}`;
+  return sanitizedUrl;
+}
 
-    const response = await fetch(`${sanitizedUrl}/clear-history`, {
-      method: 'POST',
-      headers: { 'x-api-key': SYNC_SECRET },
-      cache: 'no-store',
-    });
-    return await response.json();
-  } catch (error) {
-    return { status: 'error', message: error.message };
-  }
+export async function cancelSyncAction() {
+  return postToSyncEndpoint('/cancel');
+}
+
+export async function clearHistoryAction() {
+  return postToSyncEndpoint('/clear-history');
 }
