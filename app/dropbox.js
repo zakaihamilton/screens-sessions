@@ -3,6 +3,7 @@
 import { createRequire } from 'node:module';
 import dictionaryEn from 'dictionary-en';
 import dictionaryHe from 'dictionary-he';
+import { hasHebrewVowelPoints } from './hebrewPunctuation';
 
 const require = createRequire(import.meta.url);
 const hunspellAsm = require('hunspell-asm');
@@ -265,10 +266,7 @@ export async function scanDropboxServer() {
                 privacyWarning = 'file name is marked as private';
               }
 
-              if (
-                /[\u0590-\u05FF]/.test(titleStr) &&
-                /[^a-zA-Z0-9\u0590-\u05FF\s']/.test(titleStr)
-              ) {
+              if (hasHebrewVowelPoints(titleStr)) {
                 hebrewPunctuationWarning = 'Hebrew title contains punctuation';
               }
 
