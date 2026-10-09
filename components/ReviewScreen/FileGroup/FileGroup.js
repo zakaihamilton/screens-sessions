@@ -24,7 +24,11 @@ export default function FileGroup({
 
   return (
     <div className={styles.card}>
-      <div className={styles.header} onClick={() => onToggleGroup(groupName, files)}>
+      <button
+        type="button"
+        className={styles.header}
+        onClick={() => onToggleGroup(groupName, files)}
+      >
         <div className={styles.checkboxArea}>
           {validFiles.length > 0 ? (
             allSelected ? (
@@ -51,7 +55,7 @@ export default function FileGroup({
         </div>
 
         <span className={styles.itemCount}>{sortedFiles.length} items</span>
-      </div>
+      </button>
 
       <div className={styles.fileList}>
         {sortedFiles.map((file) => (

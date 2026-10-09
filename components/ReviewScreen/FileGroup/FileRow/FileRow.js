@@ -24,7 +24,13 @@ export default function FileRow({ file, isSelected, showFullNames, onToggleSelec
   ].join(' ');
 
   return (
-    <div className={rowClass} onClick={() => onToggleSelect(file.id, file.isValid)}>
+    <button
+      type="button"
+      className={rowClass}
+      disabled={!file.isValid}
+      aria-pressed={file.isValid ? isSelected : undefined}
+      onClick={() => onToggleSelect(file.id, file.isValid)}
+    >
       <div className={styles.checkbox}>
         {file.isValid ? (
           isSelected ? (
@@ -100,6 +106,6 @@ export default function FileRow({ file, isSelected, showFullNames, onToggleSelec
           )}
         </div>
       </div>
-    </div>
+    </button>
   );
 }
