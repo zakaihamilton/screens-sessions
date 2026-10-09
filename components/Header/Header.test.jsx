@@ -49,7 +49,7 @@ describe('Header', () => {
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: '' }));
+    await user.click(screen.getByRole('button', { name: 'Switch to dark mode' }));
 
     expect(onToggleTheme).toHaveBeenCalledTimes(1);
   });
