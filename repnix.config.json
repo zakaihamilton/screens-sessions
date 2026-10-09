@@ -6,9 +6,6 @@
     "timeoutSeconds": 300
   },
   "categories": {
-    "accessibility": {
-      "mode": "required"
-    },
     "runtime-accessibility": {
       "mode": "required"
     },
