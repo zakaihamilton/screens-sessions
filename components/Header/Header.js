@@ -31,7 +31,12 @@ export default function Header({ activeTab, theme, onTabChange, onToggleTheme })
             </button>
           </nav>
         </div>
-        <button type="button" className={styles.themeButton} onClick={onToggleTheme}>
+        <button
+          type="button"
+          className={styles.themeButton}
+          onClick={onToggleTheme}
+          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+        >
           {theme === 'light' ? (
             <Moon className={styles.themeIcon} />
           ) : (
