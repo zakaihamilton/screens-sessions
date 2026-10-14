@@ -41,6 +41,8 @@ export default function App() {
       localStorage.theme === 'dark' ||
       (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
     ) {
+      // This browser-only preference runs after hydration to avoid a server/client theme mismatch.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTheme('dark');
       document.documentElement.classList.add('dark');
     }
