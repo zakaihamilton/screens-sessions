@@ -51,12 +51,13 @@
     "license-checker": "^25.0.1",
     "markdownlint-cli2": "^0.23.2",
     "repnix": "^1.1.0",
-    "typescript": "^6.0.3",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
     "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.63.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "stylelint": "^17.11.1",
-    "stylelint-config-standard": "^40.0.0"
+    "stylelint-config-standard": "^40.0.0",
+    "@typescript/native": "npm:typescript@7.0.2"
   },
   "engines": {
     "node": ">=24.22.0 <25"
