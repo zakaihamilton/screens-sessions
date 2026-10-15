@@ -1,4 +1,5 @@
 {
+  "packageManager": "pnpm@10.33.0",
   "name": "screens-sessions",
   "version": "0.1.0",
   "private": true,
@@ -15,7 +16,7 @@
     "health": "repnix check",
     "health:dead-code": "knip",
     "health:duplication": "jscpd app",
-    "health:coverage": "c8 --all --reporter=text npm run test",
+    "health:coverage": "c8 --all --reporter=text pnpm run test",
     "health:licenses": "license-checker --json",
     "health:documentation": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#playwright-report\" \"#test-results\" \"#coverage\" \"#dist\" \"#build\" \"#.next\" \"#.turbo\" \"#.git\" \"#.repnix\" \"#generated\"",
     "health:a11y": "playwright test tests/e2e/guardrails.spec.ts --project=chromium --grep=WCAG",
