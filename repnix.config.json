@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "severityThreshold": "warning",
+  "execution": {
+    "jobs": 2,
+    "timeoutSeconds": 300
+  },
+  "categories": {
+    "runtime-accessibility": {
+      "mode": "required"
+    },
+    "visual-regression": {
+      "mode": "required"
+    },
+    "interactions": {
+      "mode": "required"
+    },
+    "styles": {
+      "mode": "required"
+    }
+  }
+}
