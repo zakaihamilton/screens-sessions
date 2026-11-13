@@ -24,14 +24,16 @@
         "noUnusedVariables": "warn"
       },
       "a11y": {
-        "useButtonType": "warn",
-        "noStaticElementInteractions": "off",
-        "useKeyWithClickEvents": "off"
+        "preset": "recommended"
       },
       "suspicious": {
         "noArrayIndexKey": "warn",
         "useIterableCallbackReturn": "warn"
       }
+    },
+    "domains": {
+      "next": "recommended",
+      "react": "recommended"
     }
   },
   "javascript": {
