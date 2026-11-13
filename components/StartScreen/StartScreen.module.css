@@ -1,0 +1,117 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.card {
+  background: var(--color-surface);
+  padding: 3rem;
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--color-border);
+  max-width: 42rem;
+  width: 100%;
+}
+
+.heading {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+  text-align: center;
+  color: var(--color-text);
+}
+
+.subheading {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.description {
+  color: var(--color-text-secondary);
+  margin: 0 0 2rem;
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.stepTitle {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.scanButton {
+  width: 100%;
+  background: var(--color-blue);
+  color: #ffffff;
+  font-weight: 600;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition:
+    background 0.15s,
+    transform 0.15s;
+}
+
+.scanButton:hover {
+  background: var(--color-blue-hover);
+  transform: translateY(-2px);
+}
+
+.uploadButton {
+  width: 100%;
+  background: var(--color-purple);
+  color: #ffffff;
+  font-weight: 600;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition:
+    background 0.15s,
+    transform 0.15s;
+}
+
+.uploadButton:hover {
+  background: var(--color-purple-hover);
+  transform: translateY(-2px);
+}
+
+.buttonIcon {
+  width: 1rem;
+  height: 1rem;
+}
