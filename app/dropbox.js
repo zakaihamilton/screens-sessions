@@ -425,9 +425,7 @@ export async function moveFilesServer(filesToMove) {
           }
 
           if (/(?![a-zA-Z\u0590-\u05FF])\p{L}/u.test(titleStr)) {
-            throw new Error(
-              'Security violation: Cannot move files with non-standard letters.',
-            );
+            throw new Error('Security violation: Cannot move files with non-standard letters.');
           }
 
           if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr) && dateStr > tomorrowStr) {
