@@ -1,372 +1,67 @@
 'use server';
 
-import { createRequire } from 'node:module';
-import dictionaryEn from 'dictionary-en';
-import dictionaryHe from 'dictionary-he';
-import { hasHebrewVowelPoints } from './hebrewPunctuation';
+import { dbxRpc, getAccessToken, listAllFolderEntries, pollBatchMove } from './lib/dropbox-client';
+import {
+  extractNeededYears,
+  getDateBoundaries,
+  validateFilesForMove,
+  validateGroupFiles,
+} from './lib/session-validator';
+import { getSpellChecker } from './lib/spellcheck';
 
-const require = createRequire(import.meta.url);
-const hunspellAsm = require('hunspell-asm');
-const { loadModule } = hunspellAsm;
+async function collectExistingDestPaths(groupName, neededYears, token) {
+  const existingDestPaths = new Set();
 
-// Singleton for Spell Checker
-let spellChecker = null;
-let hunspellFactory = null;
-let affPathEn = null;
-let dicPathEn = null;
-let affPathHe = null;
-let dicPathHe = null;
-
-async function getSpellChecker() {
-  if (spellChecker) return spellChecker;
-
-  try {
-    hunspellFactory = await loadModule();
-
-    // Mount English
-    const affEn = new Uint8Array(dictionaryEn.aff);
-    const dicEn = new Uint8Array(dictionaryEn.dic);
-    affPathEn = hunspellFactory.mountBuffer(affEn, 'en.aff');
-    dicPathEn = hunspellFactory.mountBuffer(dicEn, 'en.dic');
-
-    // Mount Hebrew
-    const affHe = new Uint8Array(dictionaryHe.aff);
-    const dicHe = new Uint8Array(dictionaryHe.dic);
-    affPathHe = hunspellFactory.mountBuffer(affHe, 'he.aff');
-    dicPathHe = hunspellFactory.mountBuffer(dicHe, 'he.dic');
-
-    // Create separate checkers or one?
-    // hunspell-asm `create` takes one dictionary pair.
-    // We need to check both. We will create two instances.
-
-    const spellEn = hunspellFactory.create(affPathEn, dicPathEn);
-    const spellHe = hunspellFactory.create(affPathHe, dicPathHe);
-
-    spellChecker = {
-      correct: (word) => {
-        if (/[\u0590-\u05FF]/.test(word)) {
-          return spellHe.spell(word);
+  for (const year of neededYears) {
+    const destYearPath = `/sessions/${groupName}/${year}`;
+    try {
+      const entries = await listAllFolderEntries(destYearPath, token);
+      for (const entry of entries) {
+        if (entry['.tag'] === 'file') {
+          existingDestPaths.add(entry.path_lower);
         }
-        return spellEn.spell(word);
-      },
-      suggest: (word) => {
-        if (/[\u0590-\u05FF]/.test(word)) {
-          return spellHe.suggest(word);
-        }
-        return spellEn.suggest(word);
-      },
-    };
-
-    return spellChecker;
-  } catch (e) {
-    console.error('Failed to initialize spell checker:', e);
-    // Fail gracefully - return an object that always says correct
-    return {
-      correct: () => true,
-      suggest: () => [],
-    };
-  }
-}
-
-const DBX_API_URL = 'https://api.dropboxapi.com/2';
-const DBX_OAUTH_URL = 'https://api.dropboxapi.com/oauth2/token';
-
-// --- Helper: Get Access Token from Refresh Token ---
-async function getAccessToken() {
-  const clientId = process.env.DROPBOX_APP_KEY;
-  const clientSecret = process.env.DROPBOX_APP_SECRET;
-  const refreshToken = process.env.DROPBOX_REFRESH_TOKEN;
-
-  if (!clientId || !clientSecret || !refreshToken) {
-    throw new Error(
-      'Missing server-side environment variables: DROPBOX_APP_KEY, DROPBOX_APP_SECRET, or DROPBOX_REFRESH_TOKEN',
-    );
-  }
-
-  const params = new URLSearchParams();
-  params.append('grant_type', 'refresh_token');
-  params.append('refresh_token', refreshToken);
-  params.append('client_id', clientId);
-  params.append('client_secret', clientSecret);
-
-  const response = await fetch(DBX_OAUTH_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params,
-    cache: 'no-store',
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to refresh token: ${errorText}`);
-  }
-
-  const data = await response.json();
-  return data.access_token;
-}
-
-// --- Helper: Generic RPC Call ---
-async function dbxRpc(endpoint, body, token) {
-  const response = await fetch(`${DBX_API_URL}${endpoint}`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-    cache: 'no-store',
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    if (response.status === 429) {
-      throw new Error(`Rate limit exceeded (429).`);
+      }
+    } catch (_e) {
+      // Ignore error (folder likely doesn't exist yet)
     }
-    throw new Error(`Dropbox API Error (${response.status}): ${errorText}`);
   }
-  return response.json();
-}
 
-function getTomorrowStr() {
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return tomorrow.toISOString().split('T')[0];
+  return existingDestPaths;
 }
 
 // --- Action: Scan Dropbox ---
 export async function scanDropboxServer() {
   try {
     const token = await getAccessToken();
-    const regex = /([0-9]*-[0-9]*-[0-9]*) (.*)\.(.*)/;
-
-    const today = new Date();
-    const tomorrowStr = getTomorrowStr();
-
-    const threeWeeksAgo = new Date(today);
-    threeWeeksAgo.setDate(threeWeeksAgo.getDate() - 21);
-    const threeWeeksAgoStr = threeWeeksAgo.toISOString().split('T')[0];
-
-    // Ensure spell checker is initialized
+    const { tomorrowStr, threeWeeksAgoStr } = getDateBoundaries();
     const spell = await getSpellChecker();
 
     // 1. List folders in /shared_sessions
-    let folders = [];
-    let hasMore = true;
-    let cursor = null;
-
-    while (hasMore) {
-      const result = await dbxRpc(
-        cursor ? '/files/list_folder/continue' : '/files/list_folder',
-        cursor ? { cursor } : { path: '/shared_sessions', recursive: false },
-        token,
-      );
-      folders = [...folders, ...result.entries];
-      cursor = result.cursor;
-      hasMore = result.has_more;
-    }
-
+    const folders = await listAllFolderEntries('/shared_sessions', token);
     const groupFolders = folders.filter((f) => f['.tag'] === 'folder');
     const foundGroups = {};
 
     // 2. Scan each group folder
     for (const group of groupFolders) {
       const groupName = group.name;
-      let groupFiles = [];
-      let gHasMore = true;
-      let gCursor = null;
 
       try {
-        while (gHasMore) {
-          const result = await dbxRpc(
-            gCursor ? '/files/list_folder/continue' : '/files/list_folder',
-            gCursor ? { cursor: gCursor } : { path: group.path_lower, recursive: false },
-            token,
-          );
-          groupFiles = [...groupFiles, ...result.entries];
-          gCursor = result.cursor;
-          gHasMore = result.has_more;
-        }
+        const groupFiles = await listAllFolderEntries(group.path_lower, token);
 
         // 3. Check for existing files in destination
-        const neededYears = new Set();
-        groupFiles.forEach((f) => {
-          if (f['.tag'] === 'file') {
-            const match = f.name.match(regex);
-            if (match) {
-              neededYears.add(match[1].split('-')[0]);
-            }
-          }
+        const neededYears = extractNeededYears(groupFiles);
+        const existingDestPaths = await collectExistingDestPaths(groupName, neededYears, token);
+
+        // 4. Filter, validate, check case consistency, and sort
+        const validFiles = validateGroupFiles(groupFiles, {
+          groupName,
+          existingDestPaths,
+          tomorrowStr,
+          threeWeeksAgoStr,
+          spell,
         });
-
-        const existingDestPaths = new Set();
-        for (const year of neededYears) {
-          const destYearPath = `/sessions/${groupName}/${year}`;
-          try {
-            let dHasMore = true;
-            let dCursor = null;
-            while (dHasMore) {
-              const result = await dbxRpc(
-                dCursor ? '/files/list_folder/continue' : '/files/list_folder',
-                dCursor ? { cursor: dCursor } : { path: destYearPath, recursive: false },
-                token,
-              );
-
-              result.entries.forEach((e) => {
-                if (e['.tag'] === 'file') {
-                  existingDestPaths.add(e.path_lower);
-                }
-              });
-              dCursor = result.cursor;
-              dHasMore = result.has_more;
-            }
-          } catch (_e) {
-            // Ignore error (folder likely doesn't exist yet)
-          }
-        }
-
-        // 4. Filter and Map
-        const validFiles = groupFiles
-          .filter((f) => f['.tag'] === 'file')
-          .map((f) => {
-            const match = f.name.match(regex);
-            if (match) {
-              const [_fullMatch, dateStr, titleStr] = match;
-              const year = dateStr.split('-')[0];
-              const destPath = `/sessions/${groupName}/${year}/${f.name}`;
-
-              let validationError = null;
-              if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-                validationError = 'Invalid date format (YYYY-MM-DD)';
-              } else if (dateStr > tomorrowStr) {
-                validationError = 'Session date is in the future';
-              } else if (titleStr.startsWith(' ')) {
-                validationError = 'Extra space between date and title';
-              } else if (titleStr.endsWith(' ')) {
-                validationError = 'Space between title and extension';
-              } else if (titleStr.endsWith('.')) {
-                validationError = 'Double period before extension';
-              } else if (titleStr.includes('  ')) {
-                validationError = 'Double space in session name';
-              } else if (titleStr.startsWith('-')) {
-                validationError = 'Session name cannot start with a hyphen';
-              } else if (/(?![a-zA-Z\u0590-\u05FF])\p{L}/u.test(titleStr)) {
-                validationError = 'Session name contains non-standard letters';
-              } else if (existingDestPaths.has(destPath.toLowerCase())) {
-                validationError = 'File already exists in destination';
-              } else if (/\.(?:mp4|m4a)\.(?:mp4|m4a)$/i.test(f.name)) {
-                validationError = 'Double extension detected (e.g., .mp4.m4a)';
-              }
-
-              // Spell Check
-              let spellingWarning = null;
-              let privacyWarning = null;
-              let hebrewPunctuationWarning = null;
-              let isOld = false;
-
-              if (f.name.toLowerCase().includes('private') || f.name.includes('פרטי')) {
-                privacyWarning = 'file name is marked as private';
-              }
-
-              if (hasHebrewVowelPoints(titleStr)) {
-                hebrewPunctuationWarning = 'Hebrew title contains punctuation';
-              }
-
-              if (!validationError) {
-                // Check if old session
-                if (dateStr < threeWeeksAgoStr) {
-                  isOld = true;
-                  spellingWarning = spellingWarning
-                    ? `${spellingWarning}. Session is older than 3 weeks`
-                    : 'Session is older than 3 weeks';
-                }
-
-                // Split by non-alphabetic and non-hebrew characters
-                const words = titleStr
-                  .split(/[^a-zA-Z\u0590-\u05FF']+/)
-                  .filter((w) => w.length > 0);
-                const misspelled = [];
-
-                for (const [_index, word] of words.entries()) {
-                  // Allow CTC and TES
-                  if (word === 'CTC' || word === 'TES') {
-                    continue;
-                  }
-
-                  if (!spell.correct(word)) {
-                    const suggestions = spell.suggest(word);
-                    misspelled.push({ word, suggestions });
-                  }
-                }
-
-                if (misspelled.length > 0) {
-                  const spellMsg = `Possible spelling errors: ${misspelled
-                    .map((m) => {
-                      if (m.suggestions && m.suggestions.length > 0) {
-                        return `${m.word} (${m.suggestions.slice(0, 3).join(', ')})`;
-                      }
-                      return m.word;
-                    })
-                    .join(', ')}`;
-
-                  spellingWarning = spellingWarning ? `${spellingWarning}. ${spellMsg}` : spellMsg;
-                }
-              }
-
-              return {
-                id: f.id,
-                name: f.name,
-                path_lower: f.path_lower,
-                path_display: f.path_display,
-                group: groupName,
-                year,
-                destPath,
-                isValid: !validationError,
-                validationError,
-                spellingWarning,
-                privacyWarning,
-                hebrewPunctuationWarning,
-                isOld,
-                datePart: dateStr,
-                titlePart: titleStr,
-              };
-            }
-            return null;
-          })
-          .filter(Boolean);
-
-        // 5. Post-process for case sensitivity consistency
-        const caseCheckGroups = {};
-        validFiles.forEach((f) => {
-          const key = `${f.datePart}|${f.titlePart.toLowerCase()}`;
-          if (!caseCheckGroups[key]) {
-            caseCheckGroups[key] = [];
-          }
-          caseCheckGroups[key].push(f);
-        });
-
-        for (const key in caseCheckGroups) {
-          const files = caseCheckGroups[key];
-          if (files.length > 1) {
-            const firstTitle = files[0].titlePart;
-            const hasMismatch = files.some((f) => f.titlePart !== firstTitle);
-            if (hasMismatch) {
-              files.forEach((f) => {
-                f.isValid = false;
-                f.validationError = f.validationError
-                  ? `${f.validationError}, Case mismatch between files`
-                  : 'Case mismatch between files';
-              });
-            }
-          }
-        }
 
         if (validFiles.length > 0) {
-          validFiles.sort((a, b) => {
-            const dateCompare = (a.datePart || '').localeCompare(b.datePart || '');
-            if (dateCompare !== 0) return dateCompare;
-            return a.name.localeCompare(b.name);
-          });
           foundGroups[groupName] = validFiles;
         }
       } catch (err) {
@@ -384,56 +79,7 @@ export async function scanDropboxServer() {
 // --- Action: Move Files ---
 export async function moveFilesServer(filesToMove) {
   try {
-    const regex = /([0-9]*-[0-9]*-[0-9]*) (.*)\.(.*)/;
-    const tomorrowStr = getTomorrowStr();
-
-    // Validate paths for security
-    for (const f of filesToMove) {
-      if (!f.path_lower.startsWith('/shared_sessions/')) {
-        throw new Error(
-          'Security violation: Invalid source path. Source files must be in /shared_sessions/.',
-        );
-      }
-      if (!f.destPath.startsWith('/sessions/')) {
-        throw new Error(
-          'Security violation: Invalid destination path. Destination files must be in /sessions/.',
-        );
-      }
-
-      // Check for future dates and double period
-      if (f.name) {
-        const match = f.name.match(regex);
-        if (match) {
-          const [_fullMatch, dateStr, titleStr] = match;
-
-          if (titleStr.endsWith('.')) {
-            throw new Error(
-              'Security violation: Cannot move files with double period before extension.',
-            );
-          }
-
-          if (titleStr.includes('  ')) {
-            throw new Error(
-              'Security violation: Cannot move files with double spaces in session name.',
-            );
-          }
-
-          if (titleStr.startsWith('-')) {
-            throw new Error(
-              'Security violation: Cannot move files with session name starting with a hyphen.',
-            );
-          }
-
-          if (/(?![a-zA-Z\u0590-\u05FF])\p{L}/u.test(titleStr)) {
-            throw new Error('Security violation: Cannot move files with non-standard letters.');
-          }
-
-          if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr) && dateStr > tomorrowStr) {
-            throw new Error('Security violation: Cannot move files with future dates.');
-          }
-        }
-      }
-    }
+    validateFilesForMove(filesToMove);
 
     const token = await getAccessToken();
     const entries = filesToMove.map((f) => ({
@@ -448,8 +94,6 @@ export async function moveFilesServer(filesToMove) {
       chunks.push(entries.slice(i, i + CHUNK_SIZE));
     }
 
-    const _allResults = {};
-
     for (const chunk of chunks) {
       const startResult = await dbxRpc(
         '/files/move_batch_v2',
@@ -460,39 +104,7 @@ export async function moveFilesServer(filesToMove) {
         token,
       );
 
-      let jobResult = null;
-
-      if (startResult['.tag'] === 'complete') {
-        jobResult = startResult.entries;
-      } else if (startResult['.tag'] === 'async_job_id') {
-        const jobId = startResult.async_job_id;
-
-        // Simple server-side polling
-        let jobStatus = 'in_progress';
-        while (jobStatus === 'in_progress') {
-          await new Promise((r) => setTimeout(r, 1000));
-          const check = await dbxRpc('/files/move_batch/check_v2', { async_job_id: jobId }, token);
-          if (check['.tag'] === 'complete') {
-            jobStatus = 'complete';
-            jobResult = check.entries;
-          } else if (check['.tag'] === 'failed') {
-            throw new Error(`Batch Job Failed: ${check.toString()}`);
-          }
-        }
-      }
-
-      // Map results back to file IDs (assuming index alignment)
-      // Note: filesToMove must be sliced exactly like chunks to map IDs correctly
-      // We'll rely on the caller to handle specific ID mapping if needed,
-      // but here we return a simplified success/fail map for the batch.
-
-      jobResult.forEach((_res, _idx) => {
-        // This logic is slightly loose on mapping back specific IDs without the original array context
-        // Ideally we pass IDs through, but for this demo we'll return the raw results array
-      });
-
-      // Better approach: Return the jobResult directly, client can map it
-      // For simplicity in this answer, we return the raw list of results
+      await pollBatchMove(startResult, token);
     }
 
     return { success: true };
